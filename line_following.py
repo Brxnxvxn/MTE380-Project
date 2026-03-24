@@ -6,17 +6,23 @@ import time
 
 MIN_CONTOUR_AREA = 20
 BLUR_KERNEL = (3, 3)
-KP = 0.05
+KP = 0.9
 KD = 0
-HYSTERESIS = 20
+HYSTERESIS = 12
 
-BASELINE_MOTOR_SPEED = 55
-MIN_MOTOR_SPEED = 45
+BASELINE_MOTOR_SPEED = 255
+MIN_MOTOR_SPEED = 20
 
-LOWER_RED1 = np.array([0,   140, 55])
-UPPER_RED1 = np.array([20,   255, 255])
-LOWER_RED2 = np.array([145, 140, 55])
+#LOWER_RED1 = np.array([0,   140, 55])
+#UPPER_RED1 = np.array([20,   255, 255])
+#LOWER_RED2 = np.array([145, 140, 55])
+#UPPER_RED2 = np.array([180, 255, 255])
+
+LOWER_RED1 = np.array([  0, 120,  70])
+UPPER_RED1 = np.array([ 10, 255, 255])
+LOWER_RED2 = np.array([160, 120,  70])
 UPPER_RED2 = np.array([180, 255, 255])
+
 
 def follow(frameQueue, enableFlag):
     prevError = 0.0
@@ -64,8 +70,8 @@ def follow(frameQueue, enableFlag):
         #cv.imshow('frame', display)
         #if cv.waitKey(1) & 0xFF == ord('q'):
         #        break
-        leftMotorSpeed = BASELINE_MOTOR_SPEED + controlSignal
-        rightMotorSpeed = BASELINE_MOTOR_SPEED - controlSignal
+        leftMotorSpeed = max(0, min(255, BASELINE_MOTOR_SPEED + controlSignal)) 
+        rightMotorSpeed = max(0, min(255, BASELINE_MOTOR_SPEED + (-controlSignal)))
         i2c_bus.write_to_motor(0x00, leftMotorSpeed, rightMotorSpeed)
         time.sleep(0.03)
 

@@ -18,7 +18,7 @@ log.log("INFO", f"[{__name__}]: Master program started")
 
 redLineFollowEnable = True;
 bullseyeDetected = {"detected": False}
-legoApproachEnable = {"enabled": False}
+legoApproachEnable = {"enabled": True}
 
 lineQueue = queue.Queue(maxsize=2)
 bullseyeQueue = queue.Queue(maxsize=2)
@@ -59,13 +59,14 @@ while redLineFollowEnable:
         log.log("INFO", f"[{__name__}]: Bullseye detected. Stopping line following")
         redLineFollowEnable = False
 log.log("INFO", f"[{__name__}]: Stopping motors")
-i2c_bus.write_to_motor(0x00, 0, 0)
+#i2c_bus.write_to_motor(0x00, 0,0)
 
 t1.join()
 t2.join()
-
-i2c_bus.write_to_servo("closed")
-quit(0)
+i2c_bus.write_to_motor(0x00, 0, 0)
+#quit(0)
+#i2c_bus.write_to_servo("closed")
+#time.sleep(1)
 
 # CENTER ON LEGO GUY
 lego_detect.approach(legoQueue, legoApproachEnable)
@@ -76,7 +77,9 @@ while legoApproachEnable:
         quit(1)
     if not legoQueue.full():
         legoQueue.put(rawFrame)
+i2c_bus.write_to_motor(0x00, 0, 0)
 log.log("INFO", f"[{__name__}]: Lego guy reached")
+time.sleep(1)
 
 # PICK UP LEGO GUY UP AND TURN AROUND
 i2c_bus.write_to_servo("closed")

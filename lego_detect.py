@@ -3,29 +3,29 @@ import numpy as np
 import i2c_bus
 import log
 
-MIN_CONTOUR_AREA = 20
+MIN_CONTOUR_AREA = 10
 BLUR_KERNEL = (5, 5)
 KPV = 0.3
 KPH = 0.5
 HYSTERESIS = 5
 
-BASELINE_MOTOR_SPEED = 25;
-MIN_MOTOR_SPEED = 10;
+BASELINE_MOTOR_SPEED = 35;
+MIN_MOTOR_SPEED = 20;
 
-LOWER_YELLOW = np.array([20, 100, 100])
-UPPER_YELLOW = np.array([30, 255, 255])
+LOWER_YELLOW = np.array([15, 80, 80])
+UPPER_YELLOW = np.array([35, 255, 255])
 
 def approach(frameQueue, enableFlag):
     while enableFlag["enabled"] == True:
-        if(frameQueue.empty()):
-            log.log("WARNING", f"[{__name__}]: Lego (yellow) frame queue is empty, skipping iteration")
-            continue
+       # if(frameQueue.empty()):
+         #   log.log("WARNING", f"[{__name__}]: Lego (yellow) frame queue is empty, skipping iteration")
+          #  continue
         rawFrame = frameQueue.get()
         frame = cv.resize(rawFrame, (600,480)) #(width, height)
         frameHeight, frameWidth, _ = frame.shape #easier
 
-        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-        hsvBlurred = cv.GaussianBlur(hsv, BLUR_KERNEL, 0)
+        blurred = cv.GaussianBlur(frame, BLUR_KERNEL, 0)      
+        hsvBlurred = cv.cvtColor(blurred, cv.COLOR_BGR2HSV) 
         mask = cv.inRange(hsvBlurred, LOWER_YELLOW, UPPER_YELLOW)
 
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -58,5 +58,6 @@ def approach(frameQueue, enableFlag):
         leftMotorSpeed = driveSignal + turnSignal
         rightMotorSpeed = driveSignal - turnSignal
         i2c_bus.write_to_motor(0x00, leftMotorSpeed, rightMotorSpeed)
+        time.sleep(0.03)
 
     log.log("INFO", f"[{__name__}]: Lego approach sequence complete")
