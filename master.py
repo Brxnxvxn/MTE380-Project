@@ -36,7 +36,7 @@ cap.set(cv.CAP_PROP_EXPOSURE, -4)
 log.log("INFO", f"[{__name__}]: Waiting for start command x")
 while input() != 'x':
     pass
-i2c_bus.write_to_servo("open")
+i2c_bus.write_to_servo("straight")
 log.log("INFO", f"[{__name__}]: Servo arm opened")
 log.log("INFO", f"[{__name__}]: Starting line following")
 
@@ -69,14 +69,16 @@ i2c_bus.write_to_motor(0x00, 0, 0)
 #time.sleep(1)
 
 # CENTER ON LEGO GUY
-lego_detect.approach(legoQueue, legoApproachEnable)
-while legoApproachEnable:
+t3 = threading.Thread(target=lego_detect.approach, args=(legoQueue, legoApproachEnable))
+t3.start()
+while legoApproachEnable["enabled"] == True:
     ret, rawFrame = cap.read()
     if not ret:
         log.log("CRITICAL", f"[{__name__}]: Failed to grab frame")
         quit(1)
     if not legoQueue.full():
         legoQueue.put(rawFrame)
+t3.join()
 i2c_bus.write_to_motor(0x00, 0, 0)
 log.log("INFO", f"[{__name__}]: Lego guy reached")
 time.sleep(1)
