@@ -5,12 +5,12 @@ import log
 import time
 
 MIN_CONTOUR_AREA = 20
-BLUR_KERNEL = (5, 5)
-KP = 0.1
-HYSTERESIS_H = 50
-HYSTERESIS_V = 20
+BLUR_KERNEL = (3, 3)
+KP = 0.4
+HYSTERESIS_H = 125
+HYSTERESIS_V = 35
 
-BASELINE_MOTOR_SPEED = 20;
+BASELINE_MOTOR_SPEED = 12;
 MIN_MOTOR_SPEED = 17;
 
 LOWER_YELLOW = np.array([15, 150, 80])
@@ -45,27 +45,45 @@ def approach(frameQueue, enableFlag):
         cx = int(M["m10"] / M["m00"])
         cy = int(M["m01"] / M["m00"])
 
-        horizontalError = cx - (frameWidth // 2)
-        verticalError = cy - (5 * frameHeight // 6)
+        horizontalError = cx - ((frameWidth // 2) + 20)
+        verticalError = (5 * frameHeight // 6) - cy
         relativeHorError = horizontalError if (abs(horizontalError) > HYSTERESIS_H) else 0
         relativeVerError = verticalError if (abs(verticalError) > HYSTERESIS_V) else 0
         print(f"H {relativeHorError} V {relativeVerError}") 
-        if(relativeHorError == 0 and relativeVerError == 0):
+        if(relativeHorError == 0 and relativeVerError <= 0):
             enableFlag["enabled"] = False;
-           # continue
+            continue
 
         #cv.circle(display, (cx, cy), 5, (0, 0, 255), -1)
         #cv.imshow("camera", display)
         #if cv.waitKey(1) & 0xFF == ord('q'):
         #    break
 
-        driveSignal = BASELINE_MOTOR_SPEED if (relativeVerError > 0) else 0
+        if abs(relativeHorError):
+            driveSignal = 0;
+            turnSignal = relativeHorError * KP
+        else:
+            driveSignal = BASELINE_MOTOR_SPEED if (abs(relativeVerError) > 0) else 0
+            turnSignal = 0;
+            
+        #print(f"Drive Signal: {driveSignal}")
+        #print(f"Turn Signal: {turnSignal}")
+
+        #driveSignal = BASELINE_MOTOR_SPEED if (relativeVerError > 0) else 0
        # if abs(driveSignal) < MIN_MOTOR_SPEED:
         #    driveSignal = MIN_MOTOR_SPEED if driveSignal > 0 else -MIN_MOTOR_SPEED 
-        turnSignal = relativeHorError * KP
-
+        #turnSignal = relativeHorError * KP
+       # if driveSignal > 0 or abs(turnSignal) > 0:
         leftMotorSpeed = max(20, min(255, int(driveSignal + turnSignal)))
         rightMotorSpeed = max(20, min(255, int(driveSignal + (-turnSignal))))
+        #    print(f"Left Motor: {leftMotorSpeed}")
+         #   print(f"Right Motor: {rightMotorSpeed}")
+       # else:
+       #     leftMotorSpeed = 0
+       #     rightMotorSpeed = 0
+        #else:
+            #leftMotorSpeed = 0;
+            #rightMotorSpeed = 0;
 
         i2c_bus.write_to_motor(0x00, leftMotorSpeed, rightMotorSpeed)
         time.sleep(0.03)

@@ -6,7 +6,7 @@ import time
 
 MIN_CONTOUR_AREA = 20
 BLUR_KERNEL = (3, 3)
-KP = 0.9
+KP = 1
 KD = 0
 HYSTERESIS = 12
 
